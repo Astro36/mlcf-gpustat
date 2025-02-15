@@ -22,7 +22,7 @@ const mapGpuName = (gpuName) => {
 const runGpuStatCommand = (client, serverStat) => {
   return new Promise((_resolve, reject) => {
     client.exec(
-      "nvidia-smi --query-gpu=timestamp,index,name,uuid,temperature.gpu,utilization.gpu,memory.total,memory.used,pstate --format=csv,noheader,nounits -l 2",
+      "nvidia-smi --query-gpu=timestamp,index,name,uuid,temperature.gpu,utilization.gpu,memory.total,memory.used,pstate --format=csv,noheader,nounits -l 1",
       (err, stream) => {
         if (err) {
           reject(err);
@@ -56,13 +56,25 @@ const runGpuStatCommand = (client, serverStat) => {
                   name: mapGpuName(name),
                   uuid,
                   temperature: Number(temperature),
-                  utilization: Number(utilization),
+                  // utilization: Number(utilization),
                   memory_total: Number(memory_total),
                   memory_used: Number(memory_used),
                   pstate,
                   updatedAt,
                 }
               );
+              if ("utilization_history" in serverStat.gpus[index]) {
+                serverStat.gpus[index].utilization_history.shift();
+                serverStat.gpus[index].utilization_history.push(
+                  Number(utilization)
+                );
+                serverStat.gpus[index].utilization_max = Math.max(
+                  ...serverStat.gpus[index].utilization_history
+                );
+              } else {
+                serverStat.gpus[index].utilization_history = [0, 0, 0];
+              }
+              // console.log(serverStat.gpus[index]);
             }
           })
           .on("end", reject)
