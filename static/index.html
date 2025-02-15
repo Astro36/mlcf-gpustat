@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLCF GPUstat</title>
+    <link rel="stylesheet" href="./src/main.css" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
+  </head>
+  <body class="bg-neutral-900 text-neutral-100">
+    <main class="mx-auto max-w-screen-xl p-4">
+      <header>
+        <h1 class="font-bold text-white">📊 MLCF GPUstat</h1>
+      </header>
+      <section
+        id="servers"
+        class="mt-2 grid grid-cols-1 gap-4 text-neutral-300 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <article style="display: none">
+          <h2 class="text-sm font-bold text-white">server-0</h2>
+          <table class="mt-1 w-full border border-neutral-800 text-xs">
+            <thead class="bg-neutral-800 text-neutral-200">
+              <tr>
+                <th class="p-1">#</th>
+                <th class="p-1">GPU</th>
+                <th class="p-1">Usage</th>
+                <th class="p-1">Memory</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="p-1 text-center">0</td>
+                <td class="p-1 text-center">NVIDIA RTX A5000</td>
+                <td class="p-1 text-right text-neutral-500">100 %</td>
+                <td class="p-1 text-right text-neutral-500">
+                  50000 / 50000 MB
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+      <footer class="mt-4">
+        <p class="text-xs text-neutral-700">Developed by Seungjae Park</p>
+      </footer>
+    </main>
+
+    <script type="text/javascript">
+      const serverStatTemplate = `
+        <article>
+          <h2 class="text-sm font-bold text-white">__SERVER_NAME__</h2>
+          <table class="mt-1 w-full border border-neutral-800 text-xs">
+            <thead class="bg-neutral-800 text-neutral-200">
+              <tr>
+                <th class="p-1">#</th>
+                <th class="p-1">GPU</th>
+                <th class="p-1">Usage</th>
+                <th class="p-1">Memory</th>
+              </tr>
+            </thead>
+            <tbody class="text-neutral-500">
+              __GPU_STATS__
+            </tbody>
+          </table>
+        </article>`;
+      const gpuStatTemplate = `
+        <tr class="__GPU_COLOR__">
+          <td class="p-1 text-center text-neutral-300">__GPU_INDEX__</td>
+          <td class="p-1 text-center">__GPU_NAME__</td>
+          <td class="p-1 text-right">__GPU_UTILIZATION__ %</td>
+          <td class="p-1 text-right">__GPU_MEMORY_USED__ / __GPU_MEMORY_TOTAL__ MB</td>
+        </tr>`;
+
+      const socket = new WebSocket("ws://localhost:3000");
+      socket.addEventListener("message", (event) => {
+        const serverStats = JSON.parse(event.data);
+        console.log("Message from server ", serverStats);
+        const servers = document.querySelector("#servers");
+        servers.innerHTML = Object.entries(serverStats)
+          .map(([serverHost, serverStat]) => {
+            let serverStatHtml = serverStatTemplate;
+            serverStatHtml = serverStatHtml.replace(
+              "__SERVER_NAME__",
+              serverStat.name,
+            );
+            const gpuStatsHTML = Object.entries(serverStat.gpus)
+              .map(([gpuIndex, gpuStat]) => {
+                let gpuStatHtml = gpuStatTemplate;
+                gpuStatHtml = gpuStatHtml.replace("__GPU_INDEX__", gpuIndex);
+                gpuStatHtml = gpuStatHtml.replace("__GPU_NAME__", gpuStat.name);
+                gpuStatHtml = gpuStatHtml.replace(
+                  "__GPU_UTILIZATION__",
+                  gpuStat.utilization,
+                );
+                gpuStatHtml = gpuStatHtml.replace(
+                  "__GPU_MEMORY_USED__",
+                  gpuStat.memory_used,
+                );
+                gpuStatHtml = gpuStatHtml.replace(
+                  "__GPU_MEMORY_TOTAL__",
+                  gpuStat.memory_total,
+                );
+                gpuStatHtml = gpuStatHtml.replace(
+                  "__GPU_PSTATE__",
+                  gpuStat.pstate,
+                );
+
+                if (gpuStat.memory_used >= 0 && gpuStat.memory_used < 10) {
+                  gpuStatHtml = gpuStatHtml.replace(
+                    "__GPU_COLOR__",
+                    "text-neutral-300",
+                  );
+                }
+                return gpuStatHtml;
+              })
+              .join("");
+            serverStatHtml = serverStatHtml.replace(
+              "__GPU_STATS__",
+              gpuStatsHTML,
+            );
+            return serverStatHtml;
+          })
+          .join("");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "mlcf-gpustat",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "ssh2": "^1.16.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.1"
+  }
+}

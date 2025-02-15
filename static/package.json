@@ -1,0 +1,27 @@
+{
+  "name": "mlcf-gpustat-static",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "serve ./dist -l 8080"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.6",
+    "autoprefixer": "^10.4.20",
+    "html-minifier-terser": "^7.2.0",
+    "postcss": "^8.5.2",
+    "serve": "^14.2.4",
+    "tailwindcss": "^4.0.6",
+    "vite": "^6.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.1",
+    "prettier-plugin-tailwindcss": "^0.6.11"
+  }
+}
