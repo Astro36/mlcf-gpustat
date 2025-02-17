@@ -75,10 +75,10 @@
           <td class="p-1 text-right">__GPU_MEMORY_USED__ / __GPU_MEMORY_TOTAL__ MB</td>
         </tr>`;
 
-      const socket = new WebSocket("ws://localhost:3000");
+      const socket = new WebSocket(`ws://${window.location.hostname}:3000`);
       socket.addEventListener("message", (event) => {
         const serverStats = JSON.parse(event.data);
-        console.log("Message from server ", serverStats);
+        // console.log("Message from server ", serverStats);
         const servers = document.querySelector("#servers");
         servers.innerHTML = Object.entries(serverStats)
           .map(([serverHost, serverStat]) => {
