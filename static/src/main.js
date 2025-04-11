@@ -24,10 +24,8 @@ const gpuStatTemplate = `
 </tr>`;
 const gpuStatMemoryTemplate = `<span class="has-tooltip">__GPU_MEMORY_USED__<span class="tooltip">__GPU_MEMORY_USED_USERS__</span></span> / __GPU_MEMORY_TOTAL__ MB`;
 
-const PORT = 4000;
-
 const run = () => {
-  const socket = new WebSocket(`ws://${window.location.hostname}:${PORT}`);
+  const socket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}`);
   socket.addEventListener("message", (event) => {
     const serverStats = JSON.parse(event.data);
     // console.log("Message from server ", serverStats);

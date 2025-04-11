@@ -2,8 +2,10 @@ import csv from "csv-parser";
 import { Client } from "ssh2";
 import serverConfigs from "./servers.config.json" with { type: "json" };
 import { WebSocketServer } from "ws";
+import http from "http";
+import serveHandler from "serve-handler";
 
-const PORT = 4000;
+const PORT = 3000;
 
 const serverStats = {};
 const gpuUuid2gpuStat = {};
@@ -38,7 +40,7 @@ const initCollectorClient = (client, host) => {
             csv({
               headers: false,
               mapValues: ({ _header, _index, value }) => value.trim(),
-            }),
+            })
           )
           .on("data", (data) => {
             const [index, name, uuid, memory_total] = Object.values(data);
@@ -56,7 +58,7 @@ const initCollectorClient = (client, host) => {
           })
           .on("end", resolve)
           .on("error", reject);
-      },
+      }
     );
   });
 };
@@ -77,7 +79,7 @@ const startCollectorClient = (client, host) => {
             csv({
               headers: false,
               mapValues: ({ _header, _index, value }) => value.trim(),
-            }),
+            })
           )
           .on("data", (data) => {
             const [updatedAt, uuid, temperature, utilization, memory_used] =
@@ -94,7 +96,7 @@ const startCollectorClient = (client, host) => {
           })
           .on("end", reject)
           .on("error", reject);
-      },
+      }
     );
 
     // Process monitoring
@@ -111,7 +113,7 @@ const startCollectorClient = (client, host) => {
             csv({
               headers: false,
               mapValues: ({ header, index, value }) => value.trim(),
-            }),
+            })
           )
           .on("data", (data) => {
             let [updatedAt, uuid, pid, user, memory_used] = Object.values(data);
@@ -135,7 +137,7 @@ const startCollectorClient = (client, host) => {
           })
           .on("end", reject)
           .on("error", reject);
-      },
+      }
     );
   });
 };
@@ -175,7 +177,11 @@ const startMonitoring = async () => {
 };
 startMonitoring();
 
-const wss = new WebSocketServer({ port: PORT });
+const server = http.createServer((request, response) => {
+  return serveHandler(request, response, {public: "static/dist"});
+});
+
+const wss = new WebSocketServer({ server });
 setInterval(() => {
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -183,3 +189,8 @@ setInterval(() => {
     }
   });
 }, 2000);
+
+server.listen(PORT, () => {
+  console.log(`Running at http://localhost:${PORT}`);
+});
+

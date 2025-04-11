@@ -1,16 +1,7 @@
 services:
   server:
     build:
-      context: ./api
+      context: .
     ports:
       - 3000:3000
-    restart: always
-
-  static:
-    build:
-      context: ./static
-    ports:
-      - 8080:8080
-    depends_on:
-      - server
     restart: always
