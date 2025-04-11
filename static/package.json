@@ -9,19 +9,20 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "serve": "serve ./dist -l 8080"
+    "serve": "serve ./dist -l 8080",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.0.6",
-    "autoprefixer": "^10.4.20",
+    "@tailwindcss/vite": "^4.1.3",
     "html-minifier-terser": "^7.2.0",
-    "postcss": "^8.5.2",
     "serve": "^14.2.4",
-    "tailwindcss": "^4.0.6",
-    "vite": "^6.1.0"
+    "tailwindcss": "^4.1.3",
+    "vite": "^6.2.6"
   },
   "devDependencies": {
-    "prettier": "^3.5.1",
+    "prettier": "^3.5.3",
+    "prettier-plugin-css-order": "^2.1.2",
     "prettier-plugin-tailwindcss": "^0.6.11"
   }
 }

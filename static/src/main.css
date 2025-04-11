@@ -1,9 +1,49 @@
 @import "tailwindcss";
 
 html {
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   font-size: 16px;
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    Roboto,
+    "Helvetica Neue",
+    "Segoe UI",
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    sans-serif;
   @media (max-width: 640px) {
     font-size: 14px;
   }
+}
+
+* {
+  scrollbar-color: #262626 transparent;
+  scrollbar-width: thin;
+}
+
+.has-tooltip {
+  display: inline-block;
+  position: relative;
+}
+
+.has-tooltip .tooltip {
+  position: absolute;
+  top: -4px;
+  left: calc(100% + 5px);
+  opacity: 0;
+  z-index: 100;
+  transition: all 0.25s ease-in-out;
+  background-color: #0d0d0d;
+  @apply rounded-md p-1 text-center text-xs text-neutral-200;
+}
+
+.has-tooltip:hover .tooltip {
+  opacity: 1;
 }

@@ -5,12 +5,16 @@
   "type": "module",
   "license": "MIT",
   "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
+  "scripts": {
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
+  },
   "dependencies": {
     "csv-parser": "^3.2.0",
     "ssh2": "^1.16.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.1"
   },
   "devDependencies": {
-    "prettier": "^3.5.1"
+    "prettier": "^3.5.3"
   }
 }
