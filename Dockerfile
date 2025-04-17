@@ -16,8 +16,9 @@ COPY package*.json ./
 RUN npm ci --production
 
 COPY --from=builder /usr/src/app/static/dist ./static/dist
-
 COPY . ./
 
+ENV NODE_ENV=production
 EXPOSE 3000
+
 CMD ["node", "./main.js"]

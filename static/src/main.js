@@ -25,13 +25,13 @@ const gpuStatTemplate = `
 const gpuStatMemoryTemplate = `<span class="has-tooltip">__GPU_MEMORY_USED__<span class="tooltip">__GPU_MEMORY_USED_USERS__</span></span> / __GPU_MEMORY_TOTAL__ MB`;
 
 const run = () => {
-  const socket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}`);
+  const socket = new WebSocket(`ws://${window.location.host}/ws`);
   socket.addEventListener("message", (event) => {
     const serverStats = JSON.parse(event.data);
-    // console.log("Message from server ", serverStats);
+    // console.log(serverStats);
     const servers = document.querySelector("#servers");
-    servers.innerHTML = Object.entries(serverStats)
-      .map(([serverHost, serverStat]) => {
+    servers.innerHTML = Object.values(serverStats)
+      .map((serverStat) => {
         let serverStatHtml = serverStatTemplate;
         serverStatHtml = serverStatHtml.replace(
           "__SERVER_NAME__",
@@ -41,7 +41,7 @@ const run = () => {
           "__SERVER_HOST__",
           serverStat.host,
         );
-        const gpuStatsHTML = Object.entries(serverStat.gpus)
+        const gpuStatsHTML = Object.entries(serverStat.gpus ?? [])
           .map(([gpuIndex, gpuStat]) => {
             let gpuStatHtml = gpuStatTemplate;
             gpuStatHtml = gpuStatHtml.replace("__GPU_INDEX__", gpuIndex);
@@ -52,19 +52,19 @@ const run = () => {
               gpuStat.utilization,
             );
 
-            if (gpuStat.memory_used >= 0 && gpuStat.memory_used < 10) {
+            if (gpuStat.memoryUsed >= 0 && gpuStat.memoryUsed < 10) {
               gpuStatHtml = gpuStatHtml
-                .replace("__GPU_MEMORY__", `0 / ${gpuStat.memory_total} MB`)
+                .replace("__GPU_MEMORY__", `0 / ${gpuStat.memoryTotal} MB`)
                 .replace("__GPU_COLOR__", "text-neutral-300");
             } else {
               gpuStatHtml = gpuStatHtml
                 .replace("__GPU_MEMORY__", gpuStatMemoryTemplate)
-                .replace("__GPU_MEMORY_USED__", gpuStat.memory_used)
-                .replace("__GPU_MEMORY_TOTAL__", gpuStat.memory_total)
+                .replace("__GPU_MEMORY_USED__", gpuStat.memoryUsed)
+                .replace("__GPU_MEMORY_TOTAL__", gpuStat.memoryTotal)
                 .replace(
                   "__GPU_MEMORY_USED_USERS__",
                   Object.values(gpuStat.processes)
-                    .map((proc) => `${proc.user}(${proc.memory_used})`)
+                    .map((proc) => `${proc.user}(${proc.memoryUsed})`)
                     .join(" "),
                 );
             }
