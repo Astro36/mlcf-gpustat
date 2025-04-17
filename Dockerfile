@@ -3,7 +3,7 @@ FROM node:23-alpine AS builder
 WORKDIR /usr/src/app/static
 
 COPY static/package*.json ./
-RUN npm ci
+RUN npm ci --production
 
 COPY static ./
 RUN npm run build
@@ -16,7 +16,8 @@ COPY package*.json ./
 RUN npm ci --production
 
 COPY --from=builder /usr/src/app/static/dist ./static/dist
-COPY . ./
+COPY main.js ./
+COPY servers.config.json ./
 
 ENV NODE_ENV=production
 EXPOSE 3000

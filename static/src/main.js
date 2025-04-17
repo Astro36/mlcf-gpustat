@@ -52,21 +52,21 @@ const run = () => {
               gpuStat.utilization,
             );
 
+            gpuStatHtml = gpuStatHtml
+              .replace("__GPU_MEMORY__", gpuStatMemoryTemplate)
+              .replace("__GPU_MEMORY_USED__", gpuStat.memoryUsed)
+              .replace("__GPU_MEMORY_TOTAL__", gpuStat.memoryTotal)
+              .replace(
+                "__GPU_MEMORY_USED_USERS__",
+                Object.values(gpuStat.processes)
+                  .map((proc) => `${proc.user}(${proc.memoryUsed})`)
+                  .join(" "),
+              );
             if (gpuStat.memoryUsed >= 0 && gpuStat.memoryUsed < 10) {
-              gpuStatHtml = gpuStatHtml
-                .replace("__GPU_MEMORY__", `0 / ${gpuStat.memoryTotal} MB`)
-                .replace("__GPU_COLOR__", "text-neutral-300");
-            } else {
-              gpuStatHtml = gpuStatHtml
-                .replace("__GPU_MEMORY__", gpuStatMemoryTemplate)
-                .replace("__GPU_MEMORY_USED__", gpuStat.memoryUsed)
-                .replace("__GPU_MEMORY_TOTAL__", gpuStat.memoryTotal)
-                .replace(
-                  "__GPU_MEMORY_USED_USERS__",
-                  Object.values(gpuStat.processes)
-                    .map((proc) => `${proc.user}(${proc.memoryUsed})`)
-                    .join(" "),
-                );
+              gpuStatHtml = gpuStatHtml.replace(
+                "__GPU_COLOR__",
+                "text-neutral-300",
+              );
             }
             return gpuStatHtml;
           })

@@ -59,9 +59,7 @@ const monitorGpuStats = (client) => {
       const [timestamp, uuid, temperature, utilization, memoryUsed] =
         Object.values(row);
 
-      if (!(uuid in gpuUuidMap)) return;
       const gpuStat = gpuUuidMap[uuid];
-
       gpuStat.temperature = Number(temperature);
       gpuStat.memoryUsed = Number(memoryUsed);
       gpuStat.updatedAt = timestamp;
@@ -89,9 +87,7 @@ const monitorGpuStats = (client) => {
       let [timestamp, uuid, pid, user, memoryUsed] = Object.values(row);
       const updatedAt = new Date(timestamp);
 
-      if (!(uuid in gpuUuidMap)) return;
       const gpuStat = gpuUuidMap[uuid];
-
       gpuStat.processes[pid] = { pid, user, memoryUsed, updatedAt };
 
       const now = updatedAt;
