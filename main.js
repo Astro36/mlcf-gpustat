@@ -20,8 +20,8 @@ const normalizeGpuName = (name) => {
   return name;
 };
 
-const initializeGpuStats = (client, host) => {
-  return new Promise((resolve, reject) => {
+const initializeGpuStats = (client, host) =>
+  new Promise((resolve, reject) => {
     const serverStat = serverStats[host];
     serverStat.gpus ??= {};
 
@@ -51,10 +51,9 @@ const initializeGpuStats = (client, host) => {
       },
     );
   });
-};
 
-const monitorGpuStats = (client) => {
-  return new Promise((_resolve, reject) => {
+const monitorGpuStats = (client) =>
+  new Promise((_resolve, reject) => {
     const handleGpuData = (row) => {
       const [timestamp, uuid, temperature, utilization, memoryUsed] =
         Object.values(row);
@@ -103,7 +102,7 @@ const monitorGpuStats = (client) => {
     };
 
     client.exec(
-      `while true; do nvidia-smi --query-compute-apps=timestamp,gpu_uuid,pid,used_memory --format=csv,noheader,nounits | while IFS=',' read -r ts uuid pid mem; do user=$(ps -o user= -p $pid 2>/dev/null); echo "$ts,$uuid,$pid,$user,$mem"; done; sleep 1; done`,
+      `while true; do timeout 5s nvidia-smi --query-compute-apps=timestamp,gpu_uuid,pid,used_memory --format=csv,noheader,nounits | while IFS=',' read -r ts uuid pid mem; do user=$(ps -o user= -p $pid 2>/dev/null); echo "$ts,$uuid,$pid,$user,$mem"; done; sleep 1; done`,
       (err, stream) => {
         if (err) return reject(err);
         stream
@@ -114,7 +113,6 @@ const monitorGpuStats = (client) => {
       },
     );
   });
-};
 
 const connectToServer = (config) => {
   const { host, name } = config;
@@ -143,12 +141,10 @@ const connectToServer = (config) => {
 };
 
 const startMonitoring = () => {
-  for (const config of serverConfigs) {
-    connectToServer(config);
-  }
+  serverConfigs.forEach(connectToServer);
 };
 
-const startServer = () => {
+const startWebServer = () => {
   const server = http.createServer((req, res) =>
     serveHandler(req, res, { public: "static/dist" }),
   );
@@ -170,4 +166,4 @@ const startServer = () => {
 };
 
 startMonitoring();
-startServer();
+startWebServer();

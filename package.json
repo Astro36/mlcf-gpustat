@@ -6,8 +6,8 @@
   "license": "MIT",
   "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
   "scripts": {
-    "format": "prettier --check .",
-    "format:fix": "prettier --write ."
+    "format": "prettier --check *.{js,json}",
+    "format:fix": "prettier --write *.{js,json}"
   },
   "dependencies": {
     "csv-parser": "^3.2.0",
