@@ -264,6 +264,6 @@ const main = () => {
   }
 
   startMonitoring();
-  startWebServer(logFile);
+  // startWebServer(logFile);
 };
 main();

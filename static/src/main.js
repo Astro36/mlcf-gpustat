@@ -18,7 +18,7 @@ const serverStatTemplate = `
   </table>
 </article>`;
 const gpuStatTemplate = `
-<tr class="cursor-pointer hover:bg-neutral-800 __GPU_COLOR__" onclick="showGpuHistory(this)" data-host="__SERVER_HOST__" data-gpu="__GPU_INDEX__" data-gpu-memory="__GPU_MEMORY_TOTAL__">
+<tr class="cursor-pointer hover:bg-neutral-800 __GPU_COLOR__" data-host="__SERVER_HOST__" data-gpu="__GPU_INDEX__" data-gpu-memory="__GPU_MEMORY_TOTAL__">
 <td class="p-1 text-center text-neutral-300">__GPU_INDEX__</td>
 <td class="p-1 text-center">__GPU_NAME__</td>
 <td class="p-1 text-right">__GPU_UTILIZATION__ %</td>
