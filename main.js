@@ -144,7 +144,7 @@ const startMonitoring = () => {
 const startWebServer = (logFilePath) => {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.pathname === "/api/gpu-history" && req.method === "GET") {
+    /* if (url.pathname === "/api/gpu-history" && req.method === "GET") {
       const host = url.searchParams.get("host");
       const gpuIndex = url.searchParams.get("gpu");
 
@@ -206,10 +206,10 @@ const startWebServer = (logFilePath) => {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Failed to retrieve GPU history" }));
       }
-    } else {
+    } else { */
       // Continue with the static file serving for non-API requests
       serveHandler(req, res, { public: "static/dist" });
-    }
+    // }
   });
 
   const wss = new WebSocketServer({ server, path: "/ws" });
@@ -264,6 +264,6 @@ const main = () => {
   }
 
   startMonitoring();
-  // startWebServer(logFile);
+  startWebServer(logFile);
 };
 main();

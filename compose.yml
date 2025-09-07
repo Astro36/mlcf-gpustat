@@ -4,7 +4,7 @@ services:
     #   context: .
     image: gpustat
     ports:
-      - 3000:3000
+      - 8080:3000
     restart: always
     volumes:
       - ./logs:/usr/src/app/logs
