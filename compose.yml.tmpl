@@ -1,0 +1,92 @@
+services:
+{{TELEMETRY_SERVICES}}
+
+  # ----- Web UI -----
+  web:
+    build:
+      context: web
+    environment:
+      - VICTORIAMETRICS_URL=http://victoriametrics:8428
+    ports:
+      - "8080:8080"
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ----- Time-series DB -----
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.138.0
+    volumes:
+      - victoriametrics_data:/var/lib/victoria-metrics
+    command:
+      - --storageDataPath=/var/lib/victoria-metrics
+      - --retentionPeriod=2y
+    ports:
+      - "8428:8428"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://victoriametrics:8428/-/healthy"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ----- Alerting -----
+  alertmanager-config:
+    image: alpine:3.23
+    volumes:
+      - ./alerting/alertmanager/alertmanager.yml.tmpl:/templates/alertmanager.yml.tmpl:ro
+      - alertmanager_config:/config
+    environment:
+      - TELEGRAM_BOT_TOKEN={{TELEGRAM_BOT_TOKEN}}
+      - TELEGRAM_CHAT_ID={{TELEGRAM_CHAT_ID}}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache gettext && \
+        mkdir -p /config && \
+        envsubst < /templates/alertmanager.yml.tmpl > /config/alertmanager.yml
+
+  alertmanager:
+    image: prom/alertmanager:v0.31.1
+    volumes:
+      - alertmanager_config:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    ports:
+      - "9093:9093"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://alertmanager:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      alertmanager-config:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  vmalert:
+    image: victoriametrics/vmalert:v1.138.0-scratch
+    volumes:
+      - ./alerting/vmalert:/etc/vmalert:ro
+    command:
+      - --rule=/etc/vmalert/*.rules
+      - --datasource.url=http://victoriametrics:8428
+      - --notifier.url=http://alertmanager:9093
+      - --remoteWrite.url=http://victoriametrics:8428
+      - --evaluationInterval=15s
+    ports:
+      - "8880:8880"
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+      alertmanager:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  victoriametrics_data:
+  alertmanager_config:
+  alertmanager_data:

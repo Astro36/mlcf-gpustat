@@ -1,4 +1,4 @@
-FROM node:23-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /usr/src/app/static
 
@@ -8,7 +8,7 @@ RUN npm ci --production
 COPY static ./
 RUN npm run build
 
-FROM node:23-alpine
+FROM node:24-alpine
 
 WORKDIR /usr/src/app
 
@@ -17,9 +17,11 @@ RUN npm ci --production
 
 COPY --from=builder /usr/src/app/static/dist ./static/dist
 COPY main.js ./
-COPY servers.config.json ./
 
 ENV NODE_ENV=production
-EXPOSE 3000
+EXPOSE 8080
+
+HEALTHCHECK --interval=1m --timeout=30s --retries=3 --start-period=1m \
+  CMD wget -q -O /dev/null http://localhost:8080/health || exit 1
 
 CMD ["node", "./main.js"]

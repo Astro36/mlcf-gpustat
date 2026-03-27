@@ -1,21 +1,20 @@
 {
-  "name": "mlcf-gpustat",
+  "name": "mlcf-gpustat-web",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
   "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
   "scripts": {
+    "start": "node main.js",
     "format": "prettier --check *.{js,json}",
     "format:fix": "prettier --write *.{js,json}"
   },
   "dependencies": {
-    "csv-parser": "^3.2.0",
-    "serve-handler": "^6.1.6",
-    "ssh2": "^1.17.0",
-    "ws": "^8.18.3"
+    "serve-handler": "^6.1.7",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
-    "prettier": "^3.6.2"
+    "prettier": "^3.8.1"
   }
 }

@@ -34,14 +34,7 @@ The tool is designed to support efficient workload scheduling and resource monit
     cd mlcf-gpustat
     ```
 
-1. Install dependencies:
-
-    ```sh
-    npm install
-    cd static && npm install && cd ..
-    ```
-
-1. Create the server configuration file (`servers.config.json`) with your server details:
+2. Create the server configuration file (`servers.config.json`) with your server details:
 
     ```json
     [
@@ -60,39 +53,29 @@ The tool is designed to support efficient workload scheduling and resource monit
     ]
     ```
 
-### Running the Application
+3. Create the environment variable file (`.env`) for Telegram alerting bot:
 
-#### Running Locally
-
-1. Build the frontend:
-
-    ```sh
-    cd static && npm run build && cd ..
+    ```txt
+    TELEGRAM_BOT_TOKEN=1234567890:AABBCCDDEEFFaabbccddeeff-placeholder
+    TELEGRAM_CHAT_ID=123456789
     ```
 
-1. Start the server:
-
-    ```sh
-    node main.js
-    ```
-
-1. Access the application at `http://localhost:3000`
-
-#### Running with Docker
+### Running the Application with Docker
 
 1. Build the Docker image:
 
     ```sh
-    docker build -t gpustat .
+    cd telemetry
+    docker build -t gpustat-telemetry .
     ```
 
-1. Run using Docker Compose:
+2. Run using Docker Compose:
 
     ```sh
     docker-compose up -d
     ```
 
-1. Access the application at `http://localhost:3000`
+3. Access the application at `http://localhost:8080`
 
 ## License
 

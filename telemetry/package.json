@@ -1,0 +1,20 @@
+{
+  "name": "mlcf-gpustat-telemetry",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
+  "scripts": {
+    "start": "node main.js",
+    "format": "prettier --check *.{js,json}",
+    "format:fix": "prettier --write *.{js,json}"
+  },
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  }
+}

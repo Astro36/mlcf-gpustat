@@ -1,0 +1,32 @@
+groups:
+  - name: gpu
+    interval: 15s
+    rules:
+
+      # ── GPU 사용 중 (상태 추적용) ────────────────────────────────────────────
+      # for: 5m → 5분 이상 사용 시에만 firing 상태 진입
+      # alertmanager에서 blackhole 수신자로 라우팅 (알림 없음)
+      # ALERTS 메트릭으로 기록되어 GPUUsageEnded 감지에 활용됨
+      - alert: GPUInUse
+        expr: gpu_memory_used > 10
+        for: 5m
+        labels:
+          severity: info
+
+      # ── GPU 사용 종료 ────────────────────────────────────────────────────────
+      # GPU가 유휴 전환 AND GPUInUse가 최근 firing 중이었을 때 발화 (1회)
+      # last_over_time으로 직전 사용자 목록 조회
+      - alert: GPUUsageEnded
+        expr: |
+          (gpu_memory_used <= 10)
+          AND on(server_name, gpu_index)
+          (ALERTS{alertname="GPUInUse", alertstate="firing"} offset 30s)
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "{{ $labels.server_name }} — GPU #{{ $labels.gpu_index }} 사용 완료"
+          users: |
+            {{- range query (printf "sort_desc(last_over_time(gpu_process_memory_used{server_name=%q,gpu_index=%q}[5m]))" $labels.server_name $labels.gpu_index) -}}
+            • {{ .Labels.user }} ({{ .Value | printf "%.0f" }}MB)
+            {{ end -}}

@@ -1,0 +1,45 @@
+{{/* ── GPU 사용 완료 (GPUUsageEnded firing) ───────────────────────────── */}}
+{{ define "telegram.gpu_status" -}}
+✅ <b>GPU 사용 완료</b>
+{{ range .Alerts.Firing -}}
+┣ 서버: <b>{{ .Labels.server_name }}</b>
+┣ GPU #{{ .Labels.gpu_index }}: <code>{{ .Labels.gpu_name }}</code>
+{{- if .Annotations.users }}
+{{ .Annotations.users -}}
+{{- end }}
+{{ end -}}
+{{- end }}
+
+{{/* ── 경고 알림 ─────────────────────────────────────────────────────────── */}}
+{{ define "telegram.warning" -}}
+{{- if .Alerts.Firing -}}
+⚠️ <b>경고 알림</b> ({{ len .Alerts.Firing }}건)
+{{ range .Alerts.Firing -}}
+┣ {{ .Annotations.summary }}
+┗ {{ .Annotations.description }}
+{{ end -}}
+{{- end -}}
+{{- if .Alerts.Resolved -}}
+✅ <b>경고 해제</b> ({{ len .Alerts.Resolved }}건)
+{{ range .Alerts.Resolved -}}
+┗ {{ .Annotations.summary }}
+{{ end -}}
+{{- end -}}
+{{- end }}
+
+{{/* ── 심각 알림 ─────────────────────────────────────────────────────────── */}}
+{{ define "telegram.critical" -}}
+🚨 <b>긴급 알림</b>
+{{ range .Alerts.Firing -}}
+┣ {{ .Annotations.summary }}
+┗ {{ .Annotations.description }}
+{{ end -}}
+{{- end }}
+
+{{/* ── 기본 알림 (라우트 미매칭) ────────────────────────────────────────── */}}
+{{ define "telegram.default" -}}
+ℹ️ <b>알림</b>
+{{ range .Alerts -}}
+{{- if eq .Status "firing" }}🔴{{ else }}🟢{{ end }} {{ .Annotations.summary }}
+{{ end -}}
+{{- end }}

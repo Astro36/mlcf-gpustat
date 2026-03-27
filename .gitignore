@@ -130,4 +130,5 @@ dist
 .pnp.*
 
 # Private
+compose.yml
 servers.config.json

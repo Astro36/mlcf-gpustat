@@ -1,0 +1,102 @@
+global:
+  resolve_timeout: 5m
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# ── 라우팅 트리 ────────────────────────────────────────────────────────────────
+route:
+  receiver: telegram-default
+  group_by: ['server_name', 'alertname']
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  routes:
+    # GPUInUse: 상태 추적용, 알림 없음 (blackhole)
+    - matchers:
+        - alertname = "GPUInUse"
+      receiver: blackhole
+      continue: false
+
+    # GPU 사용 종료: 5분 이상 사용 후 유휴 전환 시 1회 전송
+    - matchers:
+        - alertname = "GPUUsageEnded"
+      receiver: telegram-gpu-status
+      group_by: ['server_name']
+      group_wait: 30s
+      group_interval: 1h
+      repeat_interval: 1h
+      continue: false
+
+    # 경고 알림 (warning): 온도/사용률/메모리 — 30초 모아서 전송, 2시간마다 반복
+    - matchers:
+        - severity = "warning"
+      receiver: telegram-warning
+      group_by: ['server_name', 'alertname']
+      group_wait: 30s
+      group_interval: 10m
+      repeat_interval: 2h
+      continue: false
+
+    # 심각 알림 (critical): 즉시 전송, 1시간마다 반복
+    - matchers:
+        - severity = "critical"
+      receiver: telegram-critical
+      group_wait: 0s
+      group_interval: 5m
+      repeat_interval: 1h
+      continue: false
+
+# ── 수신자 ─────────────────────────────────────────────────────────────────────
+receivers:
+  - name: telegram-default
+    telegram_configs:
+      - bot_token: ${TELEGRAM_BOT_TOKEN}
+        chat_id: ${TELEGRAM_CHAT_ID}
+        parse_mode: HTML
+        message: '{{ template "telegram.default" . }}'
+        send_resolved: true
+
+  - name: blackhole
+    # 수신자 없음 — GPUInUse firing 알림을 무음 처리
+
+  - name: telegram-gpu-status
+    telegram_configs:
+      - bot_token: ${TELEGRAM_BOT_TOKEN}
+        chat_id: ${TELEGRAM_CHAT_ID}
+        parse_mode: HTML
+        message: '{{ template "telegram.gpu_status" . }}'
+        send_resolved: false
+
+  - name: telegram-warning
+    telegram_configs:
+      - bot_token: ${TELEGRAM_BOT_TOKEN}
+        chat_id: ${TELEGRAM_CHAT_ID}
+        parse_mode: HTML
+        message: '{{ template "telegram.warning" . }}'
+        send_resolved: true
+
+  - name: telegram-critical
+    telegram_configs:
+      - bot_token: ${TELEGRAM_BOT_TOKEN}
+        chat_id: ${TELEGRAM_CHAT_ID}
+        parse_mode: HTML
+        message: '{{ template "telegram.critical" . }}'
+        send_resolved: false
+
+# ── 억제 규칙 ──────────────────────────────────────────────────────────────────
+inhibit_rules:
+  # 텔레메트리 다운 시 → 모든 GPU 알림 억제 (SSH 끊기면 GPU 알림도 사라지므로)
+  - source_matchers:
+      - alertname = "TelemetryDown"
+    target_matchers:
+      - alertname =~ "GPU.*"
+
+  # 동일 GPU에 warning이 발생하면 → GPUInUse(info) 억제 (중복 방지)
+  - source_matchers:
+      - severity = "warning"
+    target_matchers:
+      - severity = "info"
+    equal: ['server_name', 'gpu_index']
+
