@@ -53,11 +53,13 @@ The tool is designed to support efficient workload scheduling and resource monit
     ]
     ```
 
-3. Create the environment variable file (`.env`) for Telegram alerting bot:
+3. Create the environment variable file (`.env`) for Telegram alerting bot and Grafana:
 
     ```txt
     TELEGRAM_BOT_TOKEN=1234567890:AABBCCDDEEFFaabbccddeeff-placeholder
     TELEGRAM_CHAT_ID=123456789
+    GF_SECURITY_ADMIN_USER=admin
+    GF_SECURITY_ADMIN_PASSWORD=admin
     ```
 
 ### Running the Application with Docker

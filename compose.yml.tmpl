@@ -86,7 +86,25 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ----- Visualization -----
+  grafana:
+    image: grafana/grafana:13.0.0-23649747481
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    env_file: .env
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   victoriametrics_data:
   alertmanager_config:
   alertmanager_data:
+  grafana_data:
