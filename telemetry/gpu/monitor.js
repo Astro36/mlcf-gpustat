@@ -43,8 +43,8 @@ export const initializeGpuStats = (client, serverStat, gpuUuidMap) =>
 /**
  * Starts continuous GPU monitoring via nvidia-smi.
  *
- * ⚠️ This Promise intentionally never resolves. `nvidia-smi -l 1` runs indefinitely,
- * so the returned Promise only rejects (on stream error or unexpected stream end).
+ * ⚠️ This Promise intentionally never resolves. The nvidia-smi monitors run
+ * indefinitely, so the returned Promise only rejects (on stream error/close).
  * Callers should treat rejection as the signal to reconnect.
  *
  * @param {object} client - Connected SSH2 client
@@ -55,6 +55,20 @@ export const initializeGpuStats = (client, serverStat, gpuUuidMap) =>
  */
 export const monitorGpuStats = (client, gpuUuidMap, serverStat, intervalMs) =>
   new Promise((_resolve, reject) => {
+    let settled = false;
+    let gpuStream;
+    let procStream;
+    let disposeTimer;
+
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(disposeTimer);
+      gpuStream?.close();
+      procStream?.close();
+      reject(err);
+    };
+
     const handleGpuData = (row) => {
       const [_timestamp, uuid, temperature, utilization, memoryUsed] = Object.values(row);
       const gpuStat = gpuUuidMap[uuid];
@@ -66,14 +80,18 @@ export const monitorGpuStats = (client, gpuUuidMap, serverStat, intervalMs) =>
     };
 
     client.exec(
-      "nvidia-smi --query-gpu=timestamp,uuid,temperature.gpu,utilization.gpu,memory.used --format=csv,noheader,nounits -l 1",
+      "nvidia-smi --query-gpu=timestamp,uuid,temperature.gpu,utilization.gpu,memory.used --format=csv,noheader,nounits -l 1 2>/dev/null",
+      { pty: true },
       (err, stream) => {
-        if (err) return reject(err);
+        if (err) return fail(err);
+        gpuStream = stream;
         stream
+          .on("error", fail)
+          .on("close", () => fail(new Error("GPU stat stream closed")))
           .pipe(csv({ headers: false, mapValues: ({ value }) => value.trim() }))
           .on("data", handleGpuData)
-          .on("error", reject)
-          .on("end", reject);
+          .on("error", fail)
+          .on("end", () => fail(new Error("GPU stat stream ended")));
       },
     );
 
@@ -85,14 +103,18 @@ export const monitorGpuStats = (client, gpuUuidMap, serverStat, intervalMs) =>
     };
 
     client.exec(
-      `while true; do timeout 5s nvidia-smi --query-compute-apps=timestamp,gpu_uuid,pid,used_memory --format=csv,noheader,nounits | while IFS=',' read -r ts uuid pid mem; do user=$(ps -o user= -p $pid 2>/dev/null); echo "$ts,$uuid,$pid,$user,$mem"; done; sleep 1; done`,
+      `while true; do timeout 5s nvidia-smi --query-compute-apps=timestamp,gpu_uuid,pid,used_memory --format=csv,noheader,nounits 2>/dev/null | while IFS=',' read -r ts uuid pid mem; do user=$(ps -o user= -p $pid 2>/dev/null); echo "$ts,$uuid,$pid,$user,$mem"; done || break; sleep 1; done`,
+      { pty: true },
       (err, stream) => {
-        if (err) return reject(err);
+        if (err) return fail(err);
+        procStream = stream;
         stream
+          .on("error", fail)
+          .on("close", () => fail(new Error("compute-apps stream closed")))
           .pipe(csv({ headers: false, mapValues: ({ value }) => value.trim() }))
           .on("data", handleProcessData)
-          .on("error", reject)
-          .on("end", reject);
+          .on("error", fail)
+          .on("end", () => fail(new Error("compute-apps stream ended")));
       },
     );
 
@@ -107,5 +129,5 @@ export const monitorGpuStats = (client, gpuUuidMap, serverStat, intervalMs) =>
         }
       }
     };
-    setInterval(disposeProcessData, intervalMs);
+    disposeTimer = setInterval(disposeProcessData, intervalMs);
   });
