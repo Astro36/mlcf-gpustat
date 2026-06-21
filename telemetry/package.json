@@ -6,6 +6,7 @@
   "license": "MIT",
   "author": "Seungjae Park <seungjae.park@yonsei.ac.kr>",
   "scripts": {
+    "cleanup": "node ./scripts/cleanup-orphans.js",
     "start": "node main.js",
     "format": "prettier --check *.{js,json}",
     "format:fix": "prettier --write *.{js,json}"
