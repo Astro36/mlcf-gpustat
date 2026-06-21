@@ -15,7 +15,8 @@ const SERVER_NAME = process.env.SERVER_NAME ?? SERVER_HOST;
 const SERVER_USERNAME = process.env.SERVER_USERNAME;
 const SERVER_PASSWORD = process.env.SERVER_PASSWORD;
 const SERVER_PORT = Number(process.env.SERVER_PORT ?? 22);
-const PUSH_INTERVAL_MS = 2000;
+const PUSH_INTERVAL_MS = 1000;
+const TTL_MS = 3000;
 
 const VICTORIAMETRICS_URL = process.env.VICTORIAMETRICS_URL ?? "http://localhost:8428";
 
@@ -43,7 +44,7 @@ const connectAndMonitor = () => {
       console.log(`✅ Connected to ${SERVER_NAME} (${SERVER_HOST})`);
       try {
         await initializeGpuStats(client, serverStat, gpuUuidMap);
-        await monitorGpuStats(client, gpuUuidMap, serverStat, PUSH_INTERVAL_MS);
+        await monitorGpuStats(client, gpuUuidMap, serverStat, TTL_MS);
       } catch (err) {
         client.emit("error", err);
       } finally {

@@ -50,10 +50,10 @@ export const initializeGpuStats = (client, serverStat, gpuUuidMap) =>
  * @param {object} client - Connected SSH2 client
  * @param {object} gpuUuidMap - UUID-to-gpuStat map populated by initializeGpuStats
  * @param {object} serverStat - Server stat object with populated `.gpus`
- * @param {number} intervalMs - Interval (ms) for process data TTL cleanup
+ * @param {number} ttlMS - Time in ms to keep process info after last update before considering it stale and removing it
  * @returns {Promise<never>} Never resolves; rejects on stream error
  */
-export const monitorGpuStats = (client, gpuUuidMap, serverStat, intervalMs) =>
+export const monitorGpuStats = (client, gpuUuidMap, serverStat, ttlMS) =>
   new Promise((_resolve, reject) => {
     let settled = false;
     let gpuStream;
@@ -120,14 +120,13 @@ export const monitorGpuStats = (client, gpuUuidMap, serverStat, intervalMs) =>
 
     const disposeProcessData = () => {
       const now = new Date();
-      const TTL = intervalMs * 1.5;
       for (const gpu of Object.values(serverStat.gpus ?? {})) {
         for (const pid in gpu.processes) {
-          if (now - gpu.processes[pid].updatedAt > TTL || !gpu.processes[pid].user) {
+          if (now - gpu.processes[pid].updatedAt > ttlMS || !gpu.processes[pid].user) {
             delete gpu.processes[pid];
           }
         }
       }
     };
-    disposeTimer = setInterval(disposeProcessData, intervalMs);
+    disposeTimer = setInterval(disposeProcessData, Math.max(1000, ttlMS / 2));
   });

@@ -22,6 +22,7 @@ services:
     command:
       - --storageDataPath=/var/lib/victoria-metrics
       - --retentionPeriod=2y
+      - --search.latencyOffset=1s
     ports:
       - "8428:8428"
     healthcheck:
