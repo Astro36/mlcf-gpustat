@@ -17,7 +17,10 @@ function renderServer(server) {
 
   return `
 <article>
-  <h2 class="text-sm font-bold text-white has-tooltip">${server.name}<span class="tooltip">${server.host}</span></h2>
+  <section class="flex items-baseline justify-between">
+    <h2 class="text-sm font-bold text-white has-tooltip">${server.name}<span class="tooltip">${server.host}</span></h2>
+    ${renderLastUsed(server)}
+  </section>
   <table class="mt-1 w-full border border-neutral-800 text-xs">
   <thead class="bg-neutral-800 text-neutral-200">
     <tr>
@@ -32,6 +35,34 @@ function renderServer(server) {
   </tbody>
   </table>
 </article>`;
+}
+
+function getActiveUser(server) {
+  for (const gpu of Object.values(server.gpus ?? {})) {
+    const procs = Object.values(gpu.processes ?? {});
+    if (procs.length > 0) return procs[0].user;
+  }
+  return null;
+}
+
+function formatElapsedTime(ageSeconds) {
+  const totalMinutes = Math.max(0, Math.floor(ageSeconds / 60));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor(totalMinutes / 60);
+  if (days > 0) return `${days}d ${hours % 24}h`;
+  if (hours > 0) return `${hours}h`;
+  return `${totalMinutes}m`;
+}
+
+function renderLastUsed(server) {
+  if (getActiveUser(server)) return "";
+  const DAY_SECONDS = 24 * 3600;
+  const lastUsed = server.lastUsed;
+  if (lastUsed?.user) {
+    const ageSeconds = Date.now() / 1000 - lastUsed.timestamp;
+    return `<span class="text-[10px] text-neutral-400">${ageSeconds > 24 * 3600 ? "🟢" : "🟡"} Last used by ${lastUsed.user} ${formatElapsedTime(ageSeconds)} ago</span>`;
+  }
+  return "";
 }
 
 function renderGpuRow(index, gpu) {

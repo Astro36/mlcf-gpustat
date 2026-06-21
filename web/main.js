@@ -13,29 +13,31 @@ const VICTORIAMETRICS_URL = process.env.VICTORIAMETRICS_URL ?? "http://localhost
  *                                             memoryUsed, temperature, processes } } } }
  *
  * @param {string} vmUrl - VictoriaMetrics base URL
- * @param {string} [lookback="15s"] - Lookback window for last_over_time (stale metrics disappear quickly)
  * @returns {Promise<object>} Server stats keyed by host
  */
-export const buildServerStats = async (vmUrl, lookback = "15s") => {
+export const buildServerStats = async (vmUrl) => {
   const vmBase = `${vmUrl}/api/v1/query`;
-  const q = (metric) => `last_over_time(${metric}[${lookback}])`;
-  const utilQuery = "max_over_time(gpu_utilization[3s])";
+  const q = (metric) => `last_over_time(${metric}[5s])`;
+  const utilQuery = "max_over_time(gpu_utilization[5s])";
+  const lastUserQuery = `tlast_over_time(gpu_process_memory_used[30d])`;
 
   try {
-    const [utilRes, memUsedRes, memTotalRes, tempRes, procRes] = await Promise.all([
+    const [utilRes, memUsedRes, memTotalRes, tempRes, procRes, lastUserRes] = await Promise.all([
       fetch(`${vmBase}?query=${encodeURIComponent(utilQuery)}`),
       fetch(`${vmBase}?query=${encodeURIComponent(q("gpu_memory_used"))}`),
       fetch(`${vmBase}?query=${encodeURIComponent(q("gpu_memory_total"))}`),
       fetch(`${vmBase}?query=${encodeURIComponent(q("gpu_temperature"))}`),
       fetch(`${vmBase}?query=${encodeURIComponent(q("gpu_process_memory_used"))}`),
+      fetch(`${vmBase}?query=${encodeURIComponent(lastUserQuery)}`),
     ]);
 
-    const [utilData, memUsedData, memTotalData, tempData, procData] = await Promise.all([
+    const [utilData, memUsedData, memTotalData, tempData, procData, lastUserData] = await Promise.all([
       utilRes.json(),
       memUsedRes.json(),
       memTotalRes.json(),
       tempRes.json(),
       procRes.json(),
+      lastUserRes.json(),
     ]);
 
     const stats = {};
@@ -65,13 +67,27 @@ export const buildServerStats = async (vmUrl, lookback = "15s") => {
       gpu.processes[user] = { pid: user, user, memoryUsed: Number(value[1]) };
     }
 
+    // Most recent user per server: pick the series with the latest sample timestamp.
+    // value[1] is the timestamp in seconds returned by tlast_over_time.
+    const lastUsed = {};
+    for (const { metric, value } of lastUserData.data?.result ?? []) {
+      const host = metric.server_host;
+      const timestamp = Number(value[1]);
+      if (!Number.isFinite(timestamp)) continue;
+      if (!lastUsed[host] || timestamp > lastUsed[host].timestamp) {
+        lastUsed[host] = { user: metric.user, timestamp };
+      }
+    }
+    for (const [host, info] of Object.entries(lastUsed)) {
+      if (stats[host]) stats[host].lastUsed = info;
+    }
+
     return stats;
   } catch (err) {
     console.error("buildServerStats error:", err.message);
     return {};
   }
 };
-
 
 // --- HTTP server ---
 
