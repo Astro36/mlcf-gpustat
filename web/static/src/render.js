@@ -60,7 +60,7 @@ function renderLastUsed(server) {
   const lastUsed = server.lastUsed;
   if (lastUsed?.user) {
     const ageSeconds = Date.now() / 1000 - lastUsed.timestamp;
-    return `<span class="text-[10px] text-neutral-400">${ageSeconds > 24 * 3600 ? "🟢" : "🟡"} Last used by ${lastUsed.user} ${formatElapsedTime(ageSeconds)} ago</span>`;
+    return `<span class="text-[10px] text-neutral-400">${ageSeconds > 24 * 3600 ? "🟢" : "🟡"} Last used by <span class="font-bold">${lastUsed.user}</span> ${formatElapsedTime(ageSeconds)} ago</span>`;
   }
   return "";
 }
