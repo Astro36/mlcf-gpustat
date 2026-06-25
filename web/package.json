@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "serve-handler": "^6.1.7",
-    "ws": "^8.20.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.4"
   }
 }
