@@ -1,4 +1,4 @@
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /usr/src/app/static
 
@@ -8,7 +8,7 @@ RUN npm ci --production
 COPY static ./
 RUN npm run build
 
-FROM node:24-alpine
+FROM node:26-alpine
 
 WORKDIR /usr/src/app
 

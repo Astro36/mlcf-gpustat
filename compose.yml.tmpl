@@ -3,8 +3,7 @@ services:
 
   # ----- Web UI -----
   web:
-    build:
-      context: web
+    image: gpustat-web:latest
     environment:
       - VICTORIAMETRICS_URL=http://victoriametrics:8428
     ports:
@@ -16,7 +15,7 @@ services:
 
   # ----- Time-series DB -----
   victoriametrics:
-    image: victoriametrics/victoria-metrics:v1.138.0
+    image: victoriametrics/victoria-metrics:v1.146.0-scratch
     volumes:
       - victoriametrics_data:/var/lib/victoria-metrics
     command:
@@ -34,7 +33,7 @@ services:
 
   # ----- Alerting -----
   alertmanager-config:
-    image: alpine:3.23
+    image: alpine:3.24
     volumes:
       - ./alerting/alertmanager/alertmanager.yml.tmpl:/templates/alertmanager.yml.tmpl:ro
       - alertmanager_config:/config
@@ -50,7 +49,7 @@ services:
         envsubst < /templates/alertmanager.yml.tmpl > /config/alertmanager.yml
 
   alertmanager:
-    image: prom/alertmanager:v0.31.1
+    image: prom/alertmanager:v0.33.0
     volumes:
       - alertmanager_config:/etc/alertmanager:ro
       - alertmanager_data:/alertmanager
@@ -69,7 +68,7 @@ services:
     restart: unless-stopped
 
   vmalert:
-    image: victoriametrics/vmalert:v1.138.0-scratch
+    image: victoriametrics/vmalert:v1.146.0-scratch
     volumes:
       - ./alerting/vmalert:/etc/vmalert:ro
     command:
@@ -89,7 +88,7 @@ services:
 
   # ----- Visualization -----
   grafana:
-    image: grafana/grafana:13.0.0-23649747481
+    image: grafana/grafana:13.1-slim
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
