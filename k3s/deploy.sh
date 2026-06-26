@@ -28,12 +28,12 @@ fi
 echo "=> Namespace"
 $KUBECTL apply -f "$K3S_DIR/namespace.yaml"
 
-echo "=> Generating telemetry manifests - ${K3S_DIR}/telemetry.yaml"
-node "$K3S_DIR/make_telemetry_manifests.js"
+echo "=> Generating gpustat-telemetry manifests"
+node "$K3S_DIR/make_gpustat_telemetry_manifests.js"
 
 echo "=> Applying manifests"
 $KUBECTL apply -f "$K3S_DIR/victoriametrics.yaml"
-$KUBECTL apply -f "$K3S_DIR/telemetry.yaml"
+$KUBECTL apply -f "$K3S_DIR/gpustat-telemetry.yaml"
 $KUBECTL apply -f "$K3S_DIR/gpustat-web.yaml"
 $KUBECTL apply -f "$K3S_DIR/ingress.yaml"
 
