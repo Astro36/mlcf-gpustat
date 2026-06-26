@@ -1,3 +1,5 @@
+name: gpustat
+
 services:
 {{TELEMETRY_SERVICES}}
 
@@ -17,7 +19,8 @@ services:
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.146.0-scratch
     volumes:
-      - victoriametrics_data:/var/lib/victoria-metrics
+      # 호스트 데이터 경로 — make_compose_file.js 가 실행 OS(리눅스/Windows)에 맞춰 채웁니다.
+      - {{VM_DATA_PATH}}:/var/lib/victoria-metrics
     command:
       - --storageDataPath=/var/lib/victoria-metrics
       - --retentionPeriod=2y
@@ -35,7 +38,7 @@ services:
   alertmanager-config:
     image: alpine:3.24
     volumes:
-      - ./alerting/alertmanager/alertmanager.yml.tmpl:/templates/alertmanager.yml.tmpl:ro
+      - ../alerting/alertmanager/alertmanager.yml.tmpl:/templates/alertmanager.yml.tmpl:ro
       - alertmanager_config:/config
     environment:
       - TELEGRAM_BOT_TOKEN={{TELEGRAM_BOT_TOKEN}}
@@ -70,7 +73,7 @@ services:
   vmalert:
     image: victoriametrics/vmalert:v1.146.0-scratch
     volumes:
-      - ./alerting/vmalert:/etc/vmalert:ro
+      - ../alerting/vmalert:/etc/vmalert:ro
     command:
       - --rule=/etc/vmalert/*.rules
       - --datasource.url=http://victoriametrics:8428
@@ -91,9 +94,9 @@ services:
     image: grafana/grafana:13.1-slim
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    env_file: .env
+      - ../grafana/provisioning:/etc/grafana/provisioning
+      - ../grafana/dashboards:/var/lib/grafana/dashboards
+    env_file: ../.env
     environment:
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
@@ -104,7 +107,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  victoriametrics_data:
   alertmanager_config:
   alertmanager_data:
   grafana_data:
