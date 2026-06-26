@@ -13,5 +13,6 @@ const htmlPlugin = () => {
 };
 
 export default {
+  base: "./",
   plugins: [tailwindcss(), htmlPlugin()],
 };

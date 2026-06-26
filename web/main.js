@@ -4,6 +4,7 @@ import serveHandler from "serve-handler";
 
 const BROADCAST_INTERVAL_MS = 2000;
 const PORT = 8080;
+const BASE_PATH = (process.env.BASE_PATH ?? "").replace(/\/+$/, "");
 const VICTORIAMETRICS_URL = process.env.VICTORIAMETRICS_URL ?? "http://localhost:8428";
 
 /**
@@ -93,8 +94,22 @@ export const buildServerStats = async (vmUrl) => {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  let pathname = url.pathname;
 
-  if (url.pathname === "/health") {
+  if (BASE_PATH) {
+    // Redirect bare base path to trailing slash so the page's relative URLs resolve under BASE_PATH.
+    if (pathname === BASE_PATH) {
+      res.writeHead(301, { Location: `${BASE_PATH}/` });
+      return res.end();
+    }
+    // Strip the prefix so health/static serving work regardless of mount point.
+    if (pathname.startsWith(`${BASE_PATH}/`)) {
+      pathname = pathname.slice(BASE_PATH.length);
+      req.url = req.url.slice(BASE_PATH.length);
+    }
+  }
+
+  if (pathname === "/health") {
     res.writeHead(200);
     return res.end("OK");
   }
@@ -104,7 +119,7 @@ const server = http.createServer(async (req, res) => {
 
 // --- WebSocket broadcast ---
 
-const wss = new WebSocketServer({ server, path: "/ws" });
+const wss = new WebSocketServer({ server, path: `${BASE_PATH}/ws` });
 
 setInterval(async () => {
   if (wss.clients.size === 0) return;
@@ -120,6 +135,6 @@ setInterval(async () => {
 // --- Start ---
 
 server.listen(PORT, () => {
-  console.log(`🌐 Web dashboard: http://localhost:${PORT}`);
+  console.log(`🌐 Web dashboard: http://localhost:${PORT}${BASE_PATH}/`);
   console.log(`📊 VictoriaMetrics: ${VICTORIAMETRICS_URL}`);
 });
