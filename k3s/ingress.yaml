@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gpustat
+  namespace: gpustat
+  labels:
+    app.kubernetes.io/name: gpustat
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: gpustat
+spec:
+  ingressClassName: traefik
+  rules:
+  - http:
+      paths:
+      - path: /gpustat
+        pathType: Prefix
+        backend:
+          service:
+            name: gpustat-web
+            port:
+              number: 8080

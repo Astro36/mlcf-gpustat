@@ -22,7 +22,7 @@ const loadEnvFile = (file) => {
   return env;
 };
 
-const formatServiceName = (name) =>
+const sanitizeServiceName = (name) =>
   String(name)
     .trim()
     .toLowerCase()
@@ -33,7 +33,7 @@ const composeFileVars = {
   ...loadEnvFile(path.join(ROOT, ".env")),
   TELEMETRY_SERVICES: servers
     .map(
-      (server) => `  telemetry-${formatServiceName(server.name)}:
+      (server) => `  telemetry-${sanitizeServiceName(server.name)}:
     image: gpustat-telemetry:latest
     env_file:
       - ../.env

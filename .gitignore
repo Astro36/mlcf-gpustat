@@ -130,5 +130,6 @@ dist
 .pnp.*
 
 # Private
-compose.yml
 servers.config.json
+compose.yml
+gpustat-telemetry.yaml

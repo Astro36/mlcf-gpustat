@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gpustat-telemetry-ssh-creds
+  namespace: gpustat
+  labels:
+    app.kubernetes.io/name: gpustat
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/part-of: gpustat
+type: Opaque
+stringData:
+{{TELEMETRY_SECRET_DATA}}
+---
+{{TELEMETRY_DEPLOYMENTS}}
