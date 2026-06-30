@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  namespace: gpustat
+  labels:
+    app.kubernetes.io/name: gpustat
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: gpustat
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: gpustat
+  labels:
+    app.kubernetes.io/name: gpustat
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: gpustat
+spec:
+  selector:
+    app.kubernetes.io/name: gpustat
+    app.kubernetes.io/component: visualization
+  ports:
+  - port: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: gpustat
+  labels:
+    app.kubernetes.io/name: gpustat
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: gpustat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gpustat
+      app.kubernetes.io/component: visualization
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gpustat
+        app.kubernetes.io/component: visualization
+        app.kubernetes.io/part-of: gpustat
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:13.1-slim
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SERVER_ROOT_URL
+          value: /grafana/
+        - name: GF_SERVER_SERVE_FROM_SUB_PATH
+          value: "true"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: gpustat-secrets
+              key: GF_SECURITY_ADMIN_USER
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gpustat-secrets
+              key: GF_SECURITY_ADMIN_PASSWORD
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: dashboard-provider
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboard-gpustat
+          mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grafana-data
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboard-gpustat
+          configMap:
+            name: grafana-dashboard-gpustat

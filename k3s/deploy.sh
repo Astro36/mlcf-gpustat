@@ -25,8 +25,21 @@ if [ "${1:-}" = "--build" ]; then
   bash "$K3S_DIR/build-images.sh"
 fi
 
+apply_configmap() {
+  local name="$1"; shift
+  $KUBECTL -n "$NS" create configmap "$name" "$@" --dry-run=client -o yaml | $KUBECTL apply -f -
+}
+
 echo "=> Namespace"
 $KUBECTL apply -f "$K3S_DIR/namespace.yaml"
+
+echo "=> Creating Secret from .env"
+$KUBECTL -n "$NS" create secret generic gpustat-secrets --from-env-file="$ROOT/.env"  --dry-run=client -o yaml | $KUBECTL apply -f -
+
+echo "=> Creating Grafana ConfigMaps"
+apply_configmap grafana-datasources --from-file=victoriametrics.yml="$ROOT/grafana/provisioning/datasources/victoriametrics.yml"
+apply_configmap grafana-dashboard-provider --from-file=dashboards.yml="$ROOT/grafana/provisioning/dashboards/dashboards.yml"
+apply_configmap grafana-dashboard-gpustat --from-file=gpustat.json="$ROOT/grafana/dashboards/gpustat.json"
 
 echo "=> Generating gpustat-telemetry manifests"
 node "$K3S_DIR/make_gpustat_telemetry_manifests.js"
@@ -36,5 +49,6 @@ $KUBECTL apply -f "$K3S_DIR/victoriametrics.yaml"
 $KUBECTL apply -f "$K3S_DIR/gpustat-telemetry.yaml"
 $KUBECTL apply -f "$K3S_DIR/gpustat-web.yaml"
 $KUBECTL apply -f "$K3S_DIR/ingress.yaml"
+$KUBECTL apply -f "$K3S_DIR/grafana.yaml"
 
 echo "[OK] Deployment complete."
