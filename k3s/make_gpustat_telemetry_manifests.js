@@ -52,32 +52,38 @@ spec:
         app.kubernetes.io/part-of: gpustat
     spec:
       containers:
-        - name: telemetry
-          image: gpustat-telemetry:latest
-          imagePullPolicy: Never
-          env:
-            - name: VICTORIAMETRICS_URL
-              value: http://victoriametrics:8428
-            - name: SERVER_NAME
-              value: "${server.name}"
-            - name: SERVER_HOST
-              value: "${server.host}"
-            - name: SERVER_USERNAME
-              value: "${server.username}"
-            - name: SERVER_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: gpustat-telemetry-ssh-creds
-                  key: ${serviceNames[i]}
-          ports:
-            - containerPort: 9090
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 9090
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            failureThreshold: 3`,
+      - name: telemetry
+        image: gpustat-telemetry:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 9090
+        env:
+        - name: VICTORIAMETRICS_URL
+          value: http://victoriametrics:8428
+        - name: SERVER_NAME
+          value: "${server.name}"
+        - name: SERVER_HOST
+          value: "${server.host}"
+        - name: SERVER_USERNAME
+          value: "${server.username}"
+        - name: SERVER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gpustat-telemetry-ssh-creds
+              key: ${serviceNames[i]}
+        resources:
+          requests:
+            cpu: 15m
+            memory: 32Mi
+          limits:
+            memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          failureThreshold: 3`,
     )
     .join("\n---\n"),
 };

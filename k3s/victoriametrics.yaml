@@ -12,7 +12,7 @@ spec:
     app.kubernetes.io/name: gpustat
     app.kubernetes.io/component: database
   ports:
-    - port: 8428
+  - port: 8428
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,19 +37,26 @@ spec:
         app.kubernetes.io/part-of: gpustat
     spec:
       containers:
-        - name: victoriametrics
-          image: victoriametrics/victoria-metrics:v1.146.0-scratch
-          args:
-            - --storageDataPath=/var/lib/victoria-metrics
-            - --retentionPeriod=2y
-            - --search.latencyOffset=1s
-          ports:
-            - containerPort: 8428
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/victoria-metrics
-      volumes:
+      - name: victoriametrics
+        image: victoriametrics/victoria-metrics:v1.146.0-scratch
+        args:
+        - --storageDataPath=/var/lib/victoria-metrics
+        - --retentionPeriod=2y
+        - --memory.allowedPercent=60
+        - --search.latencyOffset=1s
+        ports:
+        - containerPort: 8428
+        resources:
+          requests:
+            cpu: 200m
+            memory: 128Mi
+          limits:
+            memory: 1Gi
+        volumeMounts:
         - name: data
-          hostPath:
-            path: /srv/gpustat/victoriametrics
-            type: DirectoryOrCreate
+          mountPath: /var/lib/victoria-metrics
+      volumes:
+      - name: data
+        hostPath:
+          path: /srv/gpustat/victoriametrics
+          type: DirectoryOrCreate
