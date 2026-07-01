@@ -20,7 +20,7 @@ export const buildServerStats = async (vmUrl) => {
   const vmBase = `${vmUrl}/api/v1/query`;
   const q = (metric) => `last_over_time(${metric}[5s])`;
   const utilQuery = "max_over_time(gpu_utilization[5s])";
-  const lastUserQuery = `tlast_over_time(gpu_process_memory_used[30d])`;
+  const lastUserQuery = `tlast_over_time(gpu_process_memory_used[7d])`;
 
   try {
     const [utilRes, memUsedRes, memTotalRes, tempRes, procRes, lastUserRes] = await Promise.all([
